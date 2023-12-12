@@ -1,0 +1,94 @@
+ mql5
+//+------------------------------------------------------------------+
+//|                                             Maedina Gold Scalper |
+//|                                                forexroboteasy.com |
+//|                                           Forex Robot Easy Team    |
+//+------------------------------------------------------------------+
+#property copyright 'forexroboteasy.com'
+#property link      'forexroboteasy.com'
+
+// Global Variables
+extern double LotSize = 0.01; // Initial lot size
+extern double MaxLotSize = 0.1; // Maximum lot size
+extern double RiskPercentage = 2; // Risk percentage per trade
+extern int MaxTrades = 5; // Maximum number of trades allowed
+
+//+------------------------------------------------------------------+
+//|                                                                      |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+   // Check if there are already maximum number of trades open
+   if (CountOpenTrades() >= MaxTrades)
+      return;
+
+   // Check if the market is ranging
+   if (IsMarketRanging())
+   {
+      // Calculate lot size based on available capital and risk percentage
+      double calculatedLotSize = CalculateLotSize();
+
+      // Check if the calculated lot size exceeds the maximum lot size
+      if (calculatedLotSize > MaxLotSize)
+         calculatedLotSize = MaxLotSize;
+
+      // Open a buy trade
+      double entryPrice = MarketInfo(Symbol(), MODE_ASK);
+      double stopLoss = entryPrice - 50 * SymbolInfoInteger(Symbol(), SYMBOL_POINT);
+      double takeProfit = entryPrice + 100 * SymbolInfoInteger(Symbol(), SYMBOL_POINT);
+      int ticket = OrderSend(Symbol(), OP_BUY, calculatedLotSize, entryPrice, 0, stopLoss, takeProfit, 'Maedina Gold Scalper', 0, 0, clrGreen);
+
+      // Check if the trade was successfully opened
+      if (ticket > 0)
+      {
+         // Calculate the potential profit and risk of the trade
+         double potentialProfit = takeProfit - entryPrice;
+         double potentialRisk = entryPrice - stopLoss;
+
+         // Print trade details to the console
+         Print('Buy trade opened at ', entryPrice);
+         Print('Lot Size: ', calculatedLotSize);
+         Print('Potential Profit: ', potentialProfit);
+         Print('Potential Risk: ', potentialRisk);
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//|                                                                      |
+//+------------------------------------------------------------------+
+int CountOpenTrades()
+{
+   int count = 0;
+
+   for (int i = 0; i < OrdersTotal(); i++)
+   {
+      if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+      {
+         if (OrderSymbol() == Symbol() && OrderMagicNumber() == MagicNumber())
+            count++;
+      }
+   }
+
+   return count;
+}
+
+//+------------------------------------------------------------------+
+//|                                                                      |
+//+------------------------------------------------------------------+
+bool IsMarketRanging()
+{
+   // Add logic to check if the market is ranging here
+   return true;
+}
+
+//+------------------------------------------------------------------+
+//|                                                                      |
+//+------------------------------------------------------------------+
+double CalculateLotSize()
+{
+   double accountBalance = AccountBalance();
+   double calculatedLotSize = (accountBalance * RiskPercentage) / 100;
+
+   return calculatedLotSize;
+}
